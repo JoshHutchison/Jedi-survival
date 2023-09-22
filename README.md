@@ -5,7 +5,7 @@ A Jedi Survival Game
 
 ### Explanation
 
-- Its a top down survival game where a jedi us trying to survive and onslaught of stormtroopers with blasters
+- Its a top down survival game where a jedi is trying to survive the onslaught of stormtroopers with blasters
 - He can move in all directions to avoid the blasters
 - He only has a light sabre that can reflect the blaster bullets back at the stormtroopers to kill them, he can also kill them close up
 - The goal of the game is to survive for the longest
@@ -18,12 +18,13 @@ A Jedi Survival Game
 
 ### Expected Challanges
 
+- animating the players direction
+- animation of the light sabre
 - stormtroopers shooting
 - collision of the bullets to the jedi, or the front while deflecting
 - tracking the bullets back to the original storm trooper once deflected
 - tracking all the objects on the screen
-- movement of the stormtroopers
-- animation of the light sabre
+- movement of the stormtroopers 
 - Extra: force ability animations, multiple different types of bolts to deflect, moving the bolts while the map moves
 
 ## Wireframe
