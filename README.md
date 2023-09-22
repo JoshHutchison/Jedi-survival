@@ -11,6 +11,7 @@ A Jedi Survival Game
 - The goal of the game is to survive for the longest
 - Extra: add a dash 
 - Extra: Different enemies with different weapons
+- Extra: Make the map bigger, outside the original gamespace
 - Extra: Power pickups that give him force powers (force push, etc)
 - Extra: He has a multi color lightsaber, so he has to deflect the right color
 
@@ -23,7 +24,7 @@ A Jedi Survival Game
 - tracking all the objects on the screen
 - movement of the stormtroopers
 - animation of the light sabre
-- Extra: force ability animations, multiple different types of bolts to deflect
+- Extra: force ability animations, multiple different types of bolts to deflect, moving the bolts while the map moves
 
 ## Wireframe
 
@@ -36,8 +37,8 @@ A Jedi Survival Game
 - create timer
 - have the player move around
 - Have the player swing their lightsaber
-- Spawn stormtrooper randomly
 - have storm troopers shoot
+- Spawn stormtrooper randomly
 - if bolts collide with player, they die (or lose life until health reaches 0)
 - if player deflects the bolt, the stormtrooper dies
 - if player swings at stormtrooper within range, the storm trooper dies
