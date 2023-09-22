@@ -9,11 +9,11 @@ A Jedi Survival Game
 - He can move in all directions to avoid the blasters
 - He only has a light sabre that can reflect the blaster bullets back at the stormtroopers to kill them, he can also kill them close up
 - The goal of the game is to survive for the longest
+
 - Extra: add a dash 
 - Extra: Different enemies with different weapons
 - Extra: Make the map bigger, outside the original gamespace
 - Extra: Power pickups that give him force powers (force push, etc)
-- Extra: He has a multi color lightsaber, so he has to deflect the right color
 
 
 ### Expected Challanges
