@@ -1,19 +1,21 @@
 # Jedi-survival
 A Jedi Survival Game
 
-##Objective
+## Objective
 
-###Explanation
+### Explanation
 
 - Its a top down survival game where a jedi us trying to survive and onslaught of stormtroopers with blasters
+- He can move in all directions to avoid the blasters
 - He only has a light sabre that can reflect the blaster bullets back at the stormtroopers to kill them, he can also kill them close up
-- The goal of the game is to survive for the longest 
-- Extra: He has a multi color lightsaber, so he has to deflect the right color
+- The goal of the game is to survive for the longest
+- Extra: add a dash 
 - Extra: Different enemies with different weapons
 - Extra: Power pickups that give him force powers (force push, etc)
-- Extra: add a dash 
+- Extra: He has a multi color lightsaber, so he has to deflect the right color
 
-###Expected Challanges
+
+### Expected Challanges
 
 - stormtroopers shooting
 - collision of the bullets to the jedi, or the front while deflecting
@@ -21,12 +23,13 @@ A Jedi Survival Game
 - tracking all the objects on the screen
 - movement of the stormtroopers
 - animation of the light sabre
+- Extra: force ability animations, multiple different types of bolts to deflect
 
-##Wireframe
+## Wireframe
 
 ![Screenshot 2023-09-21 at 11 31 36 PM](https://github.com/JoshHutchison/Jedi-survival/assets/47956394/7849db6b-4457-4361-a525-e2125f5bdf20)
 
-##Psuedocode
+## Psuedocode
 
 - create arena
 - create player
