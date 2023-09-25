@@ -2,6 +2,7 @@
 // const ctx = canvas.getContext("2d")
 const canvas = document.querySelector('#arena')
 const ctx = canvas.getContext("2d")
+// ctx.globalCompositeOperation = "lighter";
 // let player = {x : 400, y: 400, rotation: (270 * Math.PI / 180), position: {x: 400, y:400}} //intial horizontal position of drawn rectangle
 // y = 400 //intial vertical position of drawn rectangle
 let bolt = {x:700,y:400}
@@ -12,24 +13,89 @@ const SPEED = 3
 const ROTATIONAL_SPEED = 0.05
 const FRICTION = 0.97
 const PROJECTILE_SPEED = 3
+const TROOPER_SPEED = .1
 
 class Player {
     constructor({position}) {
         this.position = position   
-        this.rotation = (180 * Math.PI / 180)
+        this.rotation = 0
+        this.originalRotation = 0
+        this.slash = false
+        this.animationCounter = 18
     }
 
     draw() {
+        
+
         ctx.fillStyle = "blue"
+        // ctx.shadowColor = 'blue'
         ctx.fillRect(this.position.x, this.position.y, 10, 10);
         ctx.fillRect(this.position.x, this.position.y, -10, -10);
         ctx.fillRect(this.position.x, this.position.y, -10, 10);
         ctx.fillRect(this.position.x, this.position.y, 10, -10);
 
+        
+
+
+    }
+    drawSaber() {
+        ctx.save()
+  
+        ctx.translate(this.position.x, this.position.y)
+        ctx.rotate((this.rotation * Math.PI) / 180)
+        ctx.translate(-this.position.x, -this.position.y)
+        
+        ctx.fillStyle = "yellow"
+        // ctx.moveTo(this.position.x + 30, this.position.y + 30)
+        ctx.fillRect(this.position.x + 12, this.position.y, 5, -50)
+        ctx.restore()
+    }
+
+    drawSlash() {
+        ctx.save()
+        
+        // ctx.translate(this.position.x, this.position.y)
+        // ctx.rotate((this.rotation * Math.PI) / 180)
+        // ctx.translate(-this.position.x, -this.position.y)
+        
+        ctx.translate(this.position.x, this.position.y)
+        ctx.rotate((this.rotation * Math.PI) / 180)
+        ctx.translate(-this.position.x  , -this.position.y )
+        
+        ctx.fillStyle = "yellow"
+        // ctx.moveTo(this.position.x + 30, this.position.y + 30)
+        
+        ctx.fillRect(this.position.x , this.position.y, 5, -50)
+        
+        ctx.restore()
     }
 
     update() {
+        // console.log(this.animationCounter)        
         this.draw()
+        // this.drawSaber()
+        // this.drawSlash()
+        if (this.slash == true ) {
+            this.drawSlash()         
+            this.rotation += 10
+            if (this.animationCounter <= 0 ) {
+                this.rotation = this.originalRotation
+                this.slash = false
+                this.animationCounter = 18
+            } else {
+                this.animationCounter--     
+            }
+                   
+            
+        }else {
+            this.drawSaber()   
+            
+        }
+    }
+
+    slashSaber() {
+        this.originalRotation = this.rotation
+        this.slash = true
     }
 }
 
@@ -64,20 +130,23 @@ class Projectile {
     }
   
     update() {
+      
+      
       this.draw()
       this.position.x += this.velocity.x
       this.position.y += this.velocity.y
-      console.log(this.rotation)
+    //   console.log(this.rotation)
     }
 }
 
 class Trooper {
     constructor({ position, velocity, playerPosition }) {
       this.position = position // {x, y}
-      this.velocity = velocity
+      
+
       this.playerPosition = playerPosition
       this.rotation = Math.atan2(this.playerPosition.y - this.position.y, this.playerPosition.x - this.position.x);
-      
+      this.velocity = { x: 0, y: 0 }
     }
     
     draw() {
@@ -108,6 +177,8 @@ class Trooper {
   
     update() {
       this.draw()
+      this.velocity.x = Math.cos(this.rotation) * TROOPER_SPEED
+      this.velocity.y = Math.sin(this.rotation) * TROOPER_SPEED
       this.position.x += this.velocity.x
       this.position.y += this.velocity.y
       this.rotation = Math.atan2(this.playerPosition.y - this.position.y, this.playerPosition.x - this.position.x);
@@ -135,26 +206,7 @@ class Trooper {
   }
 
 
-function drawJedi() {
-    // const canvas = document.querySelector('#arena')
-    // const ctx = canvas.getContext("2d")
 
-
-    ctx.fillStyle = "blue"
-    ctx.fillRect(player.x, player.y, 20, 20);
-}
-
-
-// const trooperpos = new Trooper({
-//     position: { x: 200, y: 200 },
-//     velocity: { x: 0, y: 0 },
-//   })
-
-
-function drawTrooper() {
-    ctx.fillStyle = "red"
-    ctx.fillRect(700, 400, 20, 20);
-}
 
 
 const player = new Player({
@@ -164,7 +216,8 @@ const player = new Player({
 
 const trooper = new Trooper({
     position: { x: 600, y: 500 },
-    velocity: { x: 0, y: 0 },
+    
+    velocity: { x: 0, y: 0},
     playerPosition: player.position
 })
 
@@ -182,6 +235,7 @@ function shootAll() {
             rotation: trooper.rotation
         })
     )
+    
 }
 
 //////////////////////////
@@ -193,11 +247,14 @@ let shootCounter = 0
 function drawBoard() {
     ctx.fillStyle = "grey"
     ctx.fillRect(0,0, 800,800)
+    
+    //neon effect for everything !
+    ctx.shadowColor = "rgb("+193+","+253+","+51+")";
+    ctx.shadowBlur = 10;
+
     player.update()
     trooper.update()
-    drawJedi()
-    drawTrooper()
-    // console.log(shootCounter)
+    
     shootCounter++
     if (shootCounter >= 60) {
         shootAll()
@@ -205,11 +262,12 @@ function drawBoard() {
     }
 
 
-    drawBolt()
+    // drawBolt()
     // trooperpos.update()
     for (let i = 0; i < projectiles.length; i++ ) {
         projectiles[i].update()
     }
+    // neonRect(200,200,50,50,193,253,51);
     // window.requestAnimationFrame(draw)
 }
 
@@ -232,80 +290,66 @@ function shoot() {
 
 }
 
-function drawBolt() {
+// var drawRectangle = function(x, y, w, h, border){
+//     ctx.beginPath();
+//     ctx.moveTo(x+border, y);
+//     ctx.lineTo(x+w-border, y);
+//     ctx.quadraticCurveTo(x+w-border, y, x+w, y+border);
+//     ctx.lineTo(x+w, y+h-border);
+//     ctx.quadraticCurveTo(x+w, y+h-border, x+w-border, y+h);
+//     ctx.lineTo(x+border, y+h);
+//     ctx.quadraticCurveTo(x+border, y+h, x, y+h-border);
+//     ctx.lineTo(x, y+border);
+//     ctx.quadraticCurveTo(x, y+border, x+border, y);
+//     ctx.closePath();
+//     ctx.stroke();
+//   }
+//   var neonRect = function(x,y,w,h,r,g,b){
+//     ctx.shadowColor = "rgb("+r+","+g+","+b+")";
+//     ctx.shadowBlur = 10;
+//     ctx.strokeStyle= "rgba("+r+","+g+","+b+",0.2)";
+//     ctx.lineWidth=7.5;
+//     drawRectangle(x,y,w,h,1.5);
+//     ctx.strokeStyle= "rgba("+r+","+g+","+b+",0.2)";
+//     ctx.lineWidth=6;
+//     drawRectangle(x,y,w,h,1.5);
+//     ctx.strokeStyle= "rgba("+r+","+g+","+b+",0.2)";
+//     ctx.lineWidth=4.5;
+//     drawRectangle(x,y,w,h,1.5);
+//     ctx.strokeStyle= "rgba("+r+","+g+","+b+",0.2)";
+//     ctx.lineWidth=3;
+//     drawRectangle(x,y,w,h,1.5);
+//     ctx.strokeStyle= '#fff';
+//     ctx.lineWidth=1.5;
+//     drawRectangle(x,y,w,h,1.5);
     
-    // bolt.x -= 1
-    // bolt.y += 0
-    if ((x < 800 && x > 0) && (y < 800 && y >0)) {
-        t = +dt;
-        x = (x + vx * t) + colDiam * .0109;
-        y = y - vy * t + .5 * ay * (t * t);
-        let futureIntervals = 50
-        let futurex = (x + vx * (t * dt *futureIntervals) ) + colDiam * .0109;
-        let futurey = y - vy * (t * dt *futureIntervals) + .5 * ay * ((t * dt *futureIntervals) * (t * dt *futureIntervals));
-        
-        
-        ctx.fillStyle = "orange"
-        
-        // ctx.save()
-        // ctx.rotate(45 * Math.PI / 180);
-        ctx.beginPath()
-        ctx.moveTo(x,y)
-        ctx.lineTo(futurex,futurey)
-        ctx.lineTo(futurex +2,futurey+2)
+//   };
 
-        console.log(`x: ${x} y: ${y}`)
-        console.log(`futurex: ${futurex} futurey: ${futurey}`)
-        ctx.fill()
-        // ctx.save();
-        
-        // 
-        // ctx.drawImage();
-        // draw your object
-        // ctx.restore();
-    } 
-    
-}
 drawBoard()
 
 window.addEventListener('keydown', (e) => {
+            let playerSpeed = 20
             switch (e.key) {
-                case 'ArrowLeft':
-                    // jedi.style.left = parseInt(jedi.style.left) - moveSpeed + 'px';
-                    player.position.x -= 10
-                    // player.position.x = player.x
+                case 'ArrowLeft':                    
+                    player.position.x -= playerSpeed
+                    player.rotation = 180                 
                     break;
-                case 'ArrowRight':
-                    // jedi.style.left = parseInt(jedi.style.left) + moveSpeed + 'px';
-                    player.position.x += 10
-                    // player.position.x = player.x
+                case 'ArrowRight':                   
+                    player.position.x += playerSpeed
+                    player.rotation = 0                  
                     break;
-                case 'ArrowUp':
-                    // jedi.style.top = parseInt(jedi.style.top) - moveSpeed + 'px';
-                    player.position.y -= 10
-                    // player.position.y = player.y
+                case 'ArrowUp':                    
+                    player.position.y -= playerSpeed
+                    player.rotation = 270                
                     break;
-                case 'ArrowDown':
-                    // jedi.style.top = parseInt(jedi.style.top) + moveSpeed + 'px';
-                    player.position.y += 10
-                    // player.position.y = player.y
+                case 'ArrowDown':                    
+                    player.position.y += playerSpeed
+                    player.rotation = 90            
                     console.log("down pushed")
                     break;
                 case ' ':
                     console.log("space pushed")
-                    projectiles.push(
-                        new Projectile({
-                            position: {
-                                x: trooper.position.x + Math.cos(trooper.rotation) * 30,
-                                y: trooper.position.y + Math.sin(trooper.rotation) * 30,
-                            },
-                            velocity: {
-                                x: Math.cos(trooper.rotation) * PROJECTILE_SPEED,
-                                y: Math.sin(trooper.rotation) * PROJECTILE_SPEED,
-                            },
-                        })
-                    )
-                    console.log(projectiles)
+                    player.slashSaber()
                     break;
                     
             }
@@ -315,6 +359,62 @@ window.addEventListener('keydown', (e) => {
             // drawBoard();
         })
 let gameCycle = setInterval(drawBoard, 20)
+
+
+// function drawJedi() {
+//     // const canvas = document.querySelector('#arena')
+//     // const ctx = canvas.getContext("2d")
+
+
+//     ctx.fillStyle = "blue"
+//     ctx.fillRect(player.x, player.y, 20, 20);
+// }
+
+
+// const trooperpos = new Trooper({
+//     position: { x: 200, y: 200 },
+//     velocity: { x: 0, y: 0 },
+//   })
+
+
+// function drawTrooper() {
+//     ctx.fillStyle = "red"
+//     ctx.fillRect(700, 400, 20, 20);
+// }
+// function drawBolt() {
+    
+//     // bolt.x -= 1
+//     // bolt.y += 0
+//     if ((x < 800 && x > 0) && (y < 800 && y >0)) {
+//         t = +dt;
+//         x = (x + vx * t) + colDiam * .0109;
+//         y = y - vy * t + .5 * ay * (t * t);
+//         let futureIntervals = 50
+//         let futurex = (x + vx * (t * dt *futureIntervals) ) + colDiam * .0109;
+//         let futurey = y - vy * (t * dt *futureIntervals) + .5 * ay * ((t * dt *futureIntervals) * (t * dt *futureIntervals));
+        
+        
+//         ctx.fillStyle = "orange"
+        
+//         // ctx.save()
+//         // ctx.rotate(45 * Math.PI / 180);
+//         ctx.beginPath()
+//         ctx.moveTo(x,y)
+//         ctx.lineTo(futurex,futurey)
+//         ctx.lineTo(futurex +2,futurey+2)
+
+//         console.log(`x: ${x} y: ${y}`)
+//         console.log(`futurex: ${futurex} futurey: ${futurey}`)
+//         ctx.fill()
+//         // ctx.save();
+        
+//         // 
+//         // ctx.drawImage();
+//         // draw your object
+//         // ctx.restore();
+//     } 
+    
+// }
 
 
     //draw 2 rectangles
