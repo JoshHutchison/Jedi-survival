@@ -15,6 +15,25 @@ const FRICTION = 0.97
 const PROJECTILE_SPEED = 3
 const TROOPER_SPEED = .1
 
+
+// 
+// How to calculate vector between 2 points:
+// var vectorX = this.x - enemy.x;
+// var vectorY = this.y - enemy.y;
+// 
+// How to caculate distance between 2 points:
+// var length = Math.sqrt(vectorX * vectorX + vectorY * vectorY);
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+
+
 class Player {
     constructor({position}) {
         this.position = position   
@@ -22,32 +41,73 @@ class Player {
         this.originalRotation = 0
         this.slash = false
         this.animationCounter = 18
+        this.direction = "down"
     }
 
     draw() {
         
 
-        ctx.fillStyle = "blue"
-        // ctx.shadowColor = 'blue'
-        ctx.fillRect(this.position.x, this.position.y, 10, 10);
-        ctx.fillRect(this.position.x, this.position.y, -10, -10);
-        ctx.fillRect(this.position.x, this.position.y, -10, 10);
-        ctx.fillRect(this.position.x, this.position.y, 10, -10);
+        // ctx.fillStyle = "blue"
+        // // ctx.shadowColor = 'blue'
+        // ctx.fillRect(this.position.x, this.position.y, 10, 10);
+        // ctx.fillRect(this.position.x, this.position.y, -10, -10);
+        // ctx.fillRect(this.position.x, this.position.y, -10, 10);
+        // ctx.fillRect(this.position.x, this.position.y, 10, -10);
+        let image = new Image()
+        image.src = "SpriteSheetLion.png"
+        // console.log(image.width/4, image.height/7)
+        let frameWidth = image.width/4
+        let frameHeight = image.height/7
+        let row = 0
+        let column = 0
+        
+        if (this.direction == "up") {
+            column = 1
+        } else if (this.direction == "left") {
+            column = 2
+        } else if (this.direction == "right") {
+            column = 3
+        }
+        // let row = 4
+        // let column = 3
+        let sizeMultiplier = 3
+        let charWidth = frameWidth * sizeMultiplier
+        let charHeight = frameHeight * sizeMultiplier
+        // ctx.drawImage(image, column*frameWidth, row*frameHeight, frameWidth, frameHeight, this.position.x - (frameWidth /2), this.position.y - (frameHeight / 4 * 3), frameWidth *6, frameHeight*6);
+        ctx.drawImage(image, column*frameWidth, row*frameHeight, frameWidth, frameHeight, this.position.x - (charWidth /2), this.position.y - (charHeight / 2), charWidth, charHeight);
+        // ctx.strokeStyle = "red"
+        // ctx.strokeRect(canvas.width / 2, canvas.height / 2, charWidth, charHeight)
 
         
 
 
     }
     drawSaber() {
+        let swordAngle = 0
+        if (this.direction == "down") {
+            swordAngle = 0
+        } else if (this.direction == "right") {
+            swordAngle = 0
+        } else if (this.direction == "left") {
+            swordAngle = 180
+        } else if (this.direction == "up") {
+            swordAngle = 180
+        }
         ctx.save()
   
         ctx.translate(this.position.x, this.position.y)
-        ctx.rotate((this.rotation * Math.PI) / 180)
+        ctx.rotate((swordAngle * Math.PI) / 180)
         ctx.translate(-this.position.x, -this.position.y)
         
         ctx.fillStyle = "yellow"
         // ctx.moveTo(this.position.x + 30, this.position.y + 30)
-        ctx.fillRect(this.position.x + 12, this.position.y, 5, -50)
+        let swordDirection
+        if (swordAngle == 0) {
+            swordDirection = -50
+        } else {
+            swordDirection = 50
+        }
+        ctx.fillRect(this.position.x + 18, this.position.y, 5, swordDirection)
         ctx.restore()
     }
 
@@ -57,7 +117,7 @@ class Player {
         // ctx.translate(this.position.x, this.position.y)
         // ctx.rotate((this.rotation * Math.PI) / 180)
         // ctx.translate(-this.position.x, -this.position.y)
-        
+        // console.log(this.rotation)
         ctx.translate(this.position.x, this.position.y)
         ctx.rotate((this.rotation * Math.PI) / 180)
         ctx.translate(-this.position.x  , -this.position.y )
@@ -72,11 +132,30 @@ class Player {
 
     update() {
         // console.log(this.animationCounter)        
-        this.draw()
+        
         // this.drawSaber()
         // this.drawSlash()
+        let currentSpeed = 5
+        if (keyboard.up) {
+            this.position.y -= currentSpeed;
+            this.direction = "up"
+        }
+        if (keyboard.down) {
+            this.position.y += currentSpeed;
+            this.direction = "down"
+        }    
+        if (keyboard.left) {
+            this.position.x -= currentSpeed;
+            this.direction = "left" 
+        }
+        if (keyboard.right) {
+            this.position.x += currentSpeed;
+            this.direction = "right"
+        } 
+
         if (this.slash == true ) {
             this.drawSlash()         
+            
             this.rotation += 10
             if (this.animationCounter <= 0 ) {
                 this.rotation = this.originalRotation
@@ -91,6 +170,7 @@ class Player {
             this.drawSaber()   
             
         }
+        this.draw()
     }
 
     slashSaber() {
@@ -105,19 +185,22 @@ class Projectile {
       this.velocity = velocity
       this.radius = 5
       this.rotation = rotation
+      this.trajectory = {x:0, y:0}
+      this.boltColor = 'red'
     }
     
     draw() {
       ctx.beginPath()
     //   ctx.arc(this.position.x, this.position.y, this.radius, 0, Math.PI * 2, false)
         
-        let trajX = this.position.x + (this.velocity.x * 20)
-        let trajY = this.position.y + (this.velocity.y * 20)
+        this.trajectory.x = this.position.x + (this.velocity.x * 20)
+        this.trajectory.y = this.position.y + (this.velocity.y * 20)
         
         ctx.moveTo(this.position.x, this.position.y)
         
-        ctx.lineTo(trajX, trajY)
-        ctx.strokeStyle = 'orange'
+        ctx.lineTo(this.trajectory.x, this.trajectory.y)
+        ctx.strokeStyle = this.boltColor
+        ctx.lineWidth = 5
         ctx.stroke()
 
         // // let rotatex = trajX + Math.cos(this.rotation) 
@@ -150,29 +233,54 @@ class Trooper {
     }
     
     draw() {
-      ctx.save()
+      
+        let image = new Image()
+        image.src = "SpriteSheetSkel.png"
+        // console.log(image.width/4, image.height/7)
+        let frameWidth = image.width/4
+        let frameHeight = image.height/7
+        let row = 0
+        let column = 0
+        
+        // if (this.direction == "up") {
+        //     column asadsd= 1
+        // } else if (this.direction == "left") {
+        //     column = 2
+        // } else if (this.direction == "right") {
+        //     column = 3
+        // }
+        // let row = 4
+        // let column = 3
+        let sizeMultiplier = 3
+        let charWidth = frameWidth * sizeMultiplier
+        let charHeight = frameHeight * sizeMultiplier
+        ctx.drawImage(image, column*frameWidth, row*frameHeight, frameWidth, frameHeight, this.position.x - (charWidth /2), this.position.y - (charHeight / 2), charWidth, charHeight);
+
+      
+      
+    //     ctx.save()
+        
+    //   ctx.translate(this.position.x, this.position.y)
+    //   ctx.rotate(this.rotation)
+    //   ctx.translate(-this.position.x, -this.position.y)
   
-      ctx.translate(this.position.x, this.position.y)
-      ctx.rotate(this.rotation)
-      ctx.translate(-this.position.x, -this.position.y)
+    //   ctx.beginPath()
+    //   ctx.arc(this.position.x, this.position.y, 5, 0, Math.PI * 2, false)
+    //   ctx.fillStyle = 'red'
+    //   ctx.fill()
+    //   ctx.closePath()
   
-      ctx.beginPath()
-      ctx.arc(this.position.x, this.position.y, 5, 0, Math.PI * 2, false)
-      ctx.fillStyle = 'red'
-      ctx.fill()
-      ctx.closePath()
+    //   // c.fillStyle = 'red'
+    //   // c.fillRect(this.position.x, this.position.y, 100, 100)
+    //   ctx.beginPath()
+    //   ctx.moveTo(this.position.x + 30, this.position.y)
+    //   ctx.lineTo(this.position.x - 10, this.position.y - 10)
+    //   ctx.lineTo(this.position.x - 10, this.position.y + 10)
+    //   ctx.closePath()
   
-      // c.fillStyle = 'red'
-      // c.fillRect(this.position.x, this.position.y, 100, 100)
-      ctx.beginPath()
-      ctx.moveTo(this.position.x + 30, this.position.y)
-      ctx.lineTo(this.position.x - 10, this.position.y - 10)
-      ctx.lineTo(this.position.x - 10, this.position.y + 10)
-      ctx.closePath()
-  
-      ctx.strokeStyle = 'white'
-      ctx.stroke()
-      ctx.restore()
+    //   ctx.strokeStyle = 'white'
+    //   ctx.stroke()
+    //   ctx.restore()
     }
   
     update() {
@@ -181,6 +289,8 @@ class Trooper {
       this.velocity.y = Math.sin(this.rotation) * TROOPER_SPEED
       this.position.x += this.velocity.x
       this.position.y += this.velocity.y
+      //https://gist.github.com/conorbuck/2606166
+      //var angleDeg = Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180 / Math.PI;
       this.rotation = Math.atan2(this.playerPosition.y - this.position.y, this.playerPosition.x - this.position.x);
     }
   
@@ -238,23 +348,55 @@ function shootAll() {
     
 }
 
+
 //////////////////////////
 //
 //  Main Animate
 //
 /////////////////////////
 let shootCounter = 0
+let keyboard = { up: false, down: false, left: false, right: false };
 function drawBoard() {
-    ctx.fillStyle = "grey"
+    ctx.fillStyle = "background.png"
     ctx.fillRect(0,0, 800,800)
+    let background = new Image()
+    background.src = "background2.png"
+    ctx.drawImage(background,0,0, 800, 800)
+
+    //// image
+    // lage(image, column*frameWidth, row*frameHeight, frameWidth, frameHeight, canvas.width / 2 - (frameWidth /2), canvas.height / 2 - (frameHeight / 4 * 3), frameWidth, frameHeight);
+    // ctx.drawImage(image, 0, 0 )
+    // // ctx.drawImage(image, column*frameWidth, row*frameHeight)
+    // ctx.drawImage(image, 380, 0, 128, 128, 400, 400, 128, 128)
+    // x: canvas.width / 2, y: canvas.height / 2 },
     
+    ////
+    // ctx.strokeRect(canvas.width / 2, canvas.height / 2, 128, 128)
+    //
+
     //neon effect for everything !
     ctx.shadowColor = "rgb("+193+","+253+","+51+")";
     ctx.shadowBlur = 10;
 
+    projectiles.forEach((projectile, projectileIndex) => {
+        const dist = Math.hypot(projectile.trajectory.x - player.position.x, projectile.trajectory.y - player.position.y)
+         if (dist < 20 && player.slash == true) {
+            console.log("redirected")
+            projectiles[projectileIndex].velocity.x =  -projectiles[projectileIndex].velocity.x
+            projectiles[projectileIndex].velocity.y =  -projectiles[projectileIndex].velocity.y
+            projectiles[projectileIndex].boltColor = 'blue'
+        }else if (dist < 20) {
+            console.log("touching player")
+            projectiles.splice(projectileIndex,1)
+        }
+    })
+    
+    
     player.update()
     trooper.update()
     
+
+
     shootCounter++
     if (shootCounter >= 60) {
         shootAll()
@@ -348,7 +490,7 @@ window.addEventListener('keydown', (e) => {
                     console.log("down pushed")
                     break;
                 case ' ':
-                    console.log("space pushed")
+                    // console.log("space pushed")
                     player.slashSaber()
                     break;
                     
@@ -358,6 +500,25 @@ window.addEventListener('keydown', (e) => {
             ctx.fillRect(0,0, 800,800)
             // drawBoard();
         })
+
+document.addEventListener('keydown', function (event) {
+    switch (event.keyCode) {
+        case 87: keyboard.up = true; player.rotation = 270;break; //w
+        case 83: keyboard.down = true; player.rotation = 90; break; //s
+        case 65: keyboard.left = true; player.rotation = 180 ;break; //a
+        case 68: keyboard.right = true;player.rotation = 0 ; break; //d
+    }
+    });
+    
+document.addEventListener('keyup', function (event) {
+switch (event.keyCode) {
+    case 87: keyboard.up = false; break;
+    case 83: keyboard.down = false; break;
+    case 65: keyboard.left = false; break;
+    case 68: keyboard.right = false; break;
+}
+});
+
 let gameCycle = setInterval(drawBoard, 20)
 
 
