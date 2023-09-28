@@ -1,0 +1,60 @@
+/* .arena {
+    width: 800px;
+    height: 800px;
+    background-color: grey;
+    position: relative;
+}
+
+.jedi {
+    width: 20px;
+    height: 20px;
+    background-color: blue;
+    position: absolute;
+}
+
+.trooper {
+    width: 20px;
+    height: 20px;
+    background-color: red;
+    position: absolute;
+}
+#myCanvas {
+    width: 800px;
+    height: 800px;
+    background-color: lightgray;
+}
+ */
+canvas, img {
+    border: 1px solid black;
+}
+body {
+    background-color: black;
+}
+img {
+    position: absolute;
+    left: 370px;
+    height: 30px; 
+    width:60px; 
+
+}
+div {
+    color:white 
+}
+.start-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 800px;
+    height: 800px;
+    background-color: rgba(255, 255, 255, 0.3);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: 24px;
+    text-align: center;
+    z-index: 1; /* Ensure it's displayed above the canvas */
+}
+li {
+    color: white;
+}

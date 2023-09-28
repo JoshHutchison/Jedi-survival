@@ -1,21 +1,24 @@
-// const canvas = document.querySelector('arena')
-// const ctx = canvas.getContext("2d")
+
 const canvas = document.querySelector('#arena')
 const ctx = canvas.getContext("2d")
-// ctx.globalCompositeOperation = "lighter";
-// let player = {x : 400, y: 400, rotation: (270 * Math.PI / 180), position: {x: 400, y:400}} //intial horizontal position of drawn rectangle
-// y = 400 //intial vertical position of drawn rectangle
-let bolt = {x:700,y:400}
-// let trooper = {x:700,y:400}
+const startScreen = document.querySelector("#startScreen");
+
 bolts = []
+troopers = []
 projectiles = []
 const SPEED = 3
 const ROTATIONAL_SPEED = 0.05
 const FRICTION = 0.97
 const PROJECTILE_SPEED = 3
 const TROOPER_SPEED = .1
-
-
+let timer = 0.0
+let gameStarted = false
+let spawnSpeed = 120
+let gameEnded = false
+let highScores = []
+if (localStorage.getItem('highScores')) {
+    highScores = JSON.parse(localStorage.getItem('highScores'));
+  }
 // 
 // How to calculate vector between 2 points:
 // var vectorX = this.x - enemy.x;
@@ -23,14 +26,6 @@ const TROOPER_SPEED = .1
 // 
 // How to caculate distance between 2 points:
 // var length = Math.sqrt(vectorX * vectorX + vectorY * vectorY);
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
 // 
 
 
@@ -40,22 +35,29 @@ class Player {
         this.rotation = 0
         this.originalRotation = 0
         this.slash = false
-        this.animationCounter = 18
+        this.saberAnimationCounter = 18
         this.direction = "down"
+        this.animateCounter = 0
+        this.health = 30
     }
 
     draw() {
-        
+        if (this.position.x > 800) {
+            this.position.x = 800
+        }  
+        if (this.position.x < 0) {
+            this.position.x = 0
+        } 
+        if (this.position.y > 800) {
+            this.position.y = 800
+        }
+         if (this.position.y < 0) {
+            this.position.y = 0
+         }
 
-        // ctx.fillStyle = "blue"
-        // // ctx.shadowColor = 'blue'
-        // ctx.fillRect(this.position.x, this.position.y, 10, 10);
-        // ctx.fillRect(this.position.x, this.position.y, -10, -10);
-        // ctx.fillRect(this.position.x, this.position.y, -10, 10);
-        // ctx.fillRect(this.position.x, this.position.y, 10, -10);
         let image = new Image()
         image.src = "SpriteSheetLion.png"
-        // console.log(image.width/4, image.height/7)
+
         let frameWidth = image.width/4
         let frameHeight = image.height/7
         let row = 0
@@ -68,16 +70,20 @@ class Player {
         } else if (this.direction == "right") {
             column = 3
         }
-        // let row = 4
-        // let column = 3
+        row = parseInt(this.animateCounter / 20)
+        if (this.animateCounter >= 120) {
+            this.animateCounter = 0
+        }
+
         let sizeMultiplier = 3
         let charWidth = frameWidth * sizeMultiplier
         let charHeight = frameHeight * sizeMultiplier
-        // ctx.drawImage(image, column*frameWidth, row*frameHeight, frameWidth, frameHeight, this.position.x - (frameWidth /2), this.position.y - (frameHeight / 4 * 3), frameWidth *6, frameHeight*6);
+        
         ctx.drawImage(image, column*frameWidth, row*frameHeight, frameWidth, frameHeight, this.position.x - (charWidth /2), this.position.y - (charHeight / 2), charWidth, charHeight);
-        // ctx.strokeStyle = "red"
-        // ctx.strokeRect(canvas.width / 2, canvas.height / 2, charWidth, charHeight)
-
+        if (keyboard.up || keyboard.down || keyboard.right || keyboard.left) {
+            this.animateCounter++
+        }
+        
         
 
 
@@ -100,7 +106,7 @@ class Player {
         ctx.translate(-this.position.x, -this.position.y)
         
         ctx.fillStyle = "yellow"
-        // ctx.moveTo(this.position.x + 30, this.position.y + 30)
+
         let swordDirection
         if (swordAngle == 0) {
             swordDirection = -50
@@ -112,18 +118,13 @@ class Player {
     }
 
     drawSlash() {
-        ctx.save()
-        
-        // ctx.translate(this.position.x, this.position.y)
-        // ctx.rotate((this.rotation * Math.PI) / 180)
-        // ctx.translate(-this.position.x, -this.position.y)
-        // console.log(this.rotation)
+        ctx.save()        
+
         ctx.translate(this.position.x, this.position.y)
         ctx.rotate((this.rotation * Math.PI) / 180)
         ctx.translate(-this.position.x  , -this.position.y )
         
         ctx.fillStyle = "yellow"
-        // ctx.moveTo(this.position.x + 30, this.position.y + 30)
         
         ctx.fillRect(this.position.x , this.position.y, 5, -50)
         
@@ -131,10 +132,7 @@ class Player {
     }
 
     update() {
-        // console.log(this.animationCounter)        
-        
-        // this.drawSaber()
-        // this.drawSlash()
+
         let currentSpeed = 5
         if (keyboard.up) {
             this.position.y -= currentSpeed;
@@ -157,12 +155,12 @@ class Player {
             this.drawSlash()         
             
             this.rotation += 10
-            if (this.animationCounter <= 0 ) {
+            if (this.saberAnimationCounter <= 0 ) {
                 this.rotation = this.originalRotation
                 this.slash = false
-                this.animationCounter = 18
+                this.saberAnimationCounter = 18
             } else {
-                this.animationCounter--     
+                this.saberAnimationCounter--     
             }
                    
             
@@ -191,8 +189,7 @@ class Projectile {
     
     draw() {
       ctx.beginPath()
-    //   ctx.arc(this.position.x, this.position.y, this.radius, 0, Math.PI * 2, false)
-        
+   
         this.trajectory.x = this.position.x + (this.velocity.x * 20)
         this.trajectory.y = this.position.y + (this.velocity.y * 20)
         
@@ -203,13 +200,7 @@ class Projectile {
         ctx.lineWidth = 5
         ctx.stroke()
 
-        // // let rotatex = trajX + Math.cos(this.rotation) 
-        // // let rotatey = trajY + Math.sin(this.rotation ) 
-        // console.log(rotatex, rotatey)
-        // ctx.lineTo(rotatex, rotatey)
-        // ctx.closePath()
-        
-        // ctx.fill()
+
     }
   
     update() {
@@ -218,7 +209,7 @@ class Projectile {
       this.draw()
       this.position.x += this.velocity.x
       this.position.y += this.velocity.y
-    //   console.log(this.rotation)
+  
     }
 }
 
@@ -230,89 +221,108 @@ class Trooper {
       this.playerPosition = playerPosition
       this.rotation = Math.atan2(this.playerPosition.y - this.position.y, this.playerPosition.x - this.position.x);
       this.velocity = { x: 0, y: 0 }
+      this.projectiles = [] 
+      this.dead = false
+      this.animateCounter = 0
+      this.timerchar = parseInt(timer/5) + 1
+      this.deathCounter = 0
+
+      if (this.timerchar > 9 ) {
+        this.timerchar = 9
+      }   
+      this.randomChar = Math.floor((Math.random() * this.timerchar) + 1);
+      this.sprite = `SpriteSheetBad${this.randomChar}.png`
+
+        
+      
     }
     
     draw() {
-      
+        
         let image = new Image()
-        image.src = "SpriteSheetSkel.png"
-        // console.log(image.width/4, image.height/7)
+        image.src = this.sprite
+
         let frameWidth = image.width/4
         let frameHeight = image.height/7
-        let row = 0
-        let column = 0
-        
-        // if (this.direction == "up") {
-        //     column asadsd= 1
-        // } else if (this.direction == "left") {
-        //     column = 2
-        // } else if (this.direction == "right") {
-        //     column = 3
-        // }
-        // let row = 4
-        // let column = 3
+        let row = 0 
+        let column = 0       
+        row = parseInt(this.animateCounter / 20)
+        if (this.animateCounter >= 120 ) {
+            this.animateCounter = 0
+        }
+      
         let sizeMultiplier = 3
         let charWidth = frameWidth * sizeMultiplier
         let charHeight = frameHeight * sizeMultiplier
-        ctx.drawImage(image, column*frameWidth, row*frameHeight, frameWidth, frameHeight, this.position.x - (charWidth /2), this.position.y - (charHeight / 2), charWidth, charHeight);
+        if (this.dead == false) {
+            ctx.drawImage(image, column*frameWidth, row*frameHeight, frameWidth, frameHeight, this.position.x - (charWidth /2), this.position.y - (charHeight / 2), charWidth, charHeight);
+        }else {
+            ctx.save()  
+            ctx.translate(this.position.x, this.position.y)
+            ctx.rotate(((this.deathCounter*4) * Math.PI) / 180)
+            ctx.translate(-this.position.x, -this.position.y)
+            ctx.drawImage(image, column*frameWidth, row*frameHeight, frameWidth, frameHeight, this.position.x - (charWidth /2), this.position.y - (charHeight / 2), charWidth, charHeight);
+            ctx.restore()
+        }
+        this.animateCounter++      
+      
 
-      
-      
-    //     ctx.save()
-        
-    //   ctx.translate(this.position.x, this.position.y)
-    //   ctx.rotate(this.rotation)
-    //   ctx.translate(-this.position.x, -this.position.y)
-  
-    //   ctx.beginPath()
-    //   ctx.arc(this.position.x, this.position.y, 5, 0, Math.PI * 2, false)
-    //   ctx.fillStyle = 'red'
-    //   ctx.fill()
-    //   ctx.closePath()
-  
-    //   // c.fillStyle = 'red'
-    //   // c.fillRect(this.position.x, this.position.y, 100, 100)
-    //   ctx.beginPath()
-    //   ctx.moveTo(this.position.x + 30, this.position.y)
-    //   ctx.lineTo(this.position.x - 10, this.position.y - 10)
-    //   ctx.lineTo(this.position.x - 10, this.position.y + 10)
-    //   ctx.closePath()
-  
-    //   ctx.strokeStyle = 'white'
-    //   ctx.stroke()
-    //   ctx.restore()
     }
   
     update() {
-      this.draw()
-      this.velocity.x = Math.cos(this.rotation) * TROOPER_SPEED
-      this.velocity.y = Math.sin(this.rotation) * TROOPER_SPEED
-      this.position.x += this.velocity.x
-      this.position.y += this.velocity.y
-      //https://gist.github.com/conorbuck/2606166
-      //var angleDeg = Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180 / Math.PI;
-      this.rotation = Math.atan2(this.playerPosition.y - this.position.y, this.playerPosition.x - this.position.x);
+        if (this.dead == false) {
+            this.draw()
+            this.velocity.x = Math.cos(this.rotation) * TROOPER_SPEED
+            this.velocity.y = Math.sin(this.rotation) * TROOPER_SPEED
+            this.position.x += this.velocity.x
+            this.position.y += this.velocity.y
+            //https://gist.github.com/conorbuck/2606166
+            this.rotation = Math.atan2(this.playerPosition.y - this.position.y, this.playerPosition.x - this.position.x);
+        } else if (this.deathCounter <= 45) {
+            console.log("dead")
+            this.animateCounter = 120
+            this.draw()
+            this.deathCounter++
+        
+        }else if (this.deathCounter >= 45 || this.deathCounter > 360) {
+            let image = new Image()
+            image.src = "Fire.png"
+
+            let frameWidth = image.width/12
+            let frameHeight = image.height
+            let row = 0 
+            let column = 0       
+            column = parseInt(this.animateCounter / 20) + 1          
+        
+            let sizeMultiplier = 3
+            let charWidth = frameWidth * sizeMultiplier
+            let charHeight = frameHeight * sizeMultiplier
+         
+            ctx.drawImage(image, column*frameWidth, row*frameHeight, frameWidth, frameHeight, this.position.x - (charWidth /2), this.position.y - (charHeight / 2), charWidth, charHeight);
+            
+            this.animateCounter++   
+        }
     }
   
-    getVertices() {
-      const cos = Math.cos(this.rotation)
-      const sin = Math.sin(this.rotation)
+    // getVertices() {
+    //   const cos = Math.cos(this.rotation)
+    //   const sin = Math.sin(this.rotation)
   
-      return [
-        {
-          x: this.position.x + cos * 30 - sin * 0,
-          y: this.position.y + sin * 30 + cos * 0,
-        },
-        {
-          x: this.position.x + cos * -10 - sin * 10,
-          y: this.position.y + sin * -10 + cos * 10,
-        },
-        {
-          x: this.position.x + cos * -10 - sin * -10,
-          y: this.position.y + sin * -10 + cos * -10,
-        },
-      ]
-    }
+    //   return [
+    //     {
+    //       x: this.position.x + cos * 30 - sin * 0,
+    //       y: this.position.y + sin * 30 + cos * 0,
+    //     },
+    //     {
+    //       x: this.position.x + cos * -10 - sin * 10,
+    //       y: this.position.y + sin * -10 + cos * 10,
+    //     },
+    //     {
+    //       x: this.position.x + cos * -10 - sin * -10,
+    //       y: this.position.y + sin * -10 + cos * -10,
+    //     },
+    //   ]
+    // }
   }
 
 
@@ -324,30 +334,53 @@ const player = new Player({
     velocity: { x: 0, y: 0 }
 })
 
-const trooper = new Trooper({
-    position: { x: 600, y: 500 },
-    
-    velocity: { x: 0, y: 0},
-    playerPosition: player.position
-})
+
 
 function shootAll() {
-    projectiles.push(
-        new Projectile({
-            position: {
-                x: trooper.position.x + Math.cos(trooper.rotation) * 30,
-                y: trooper.position.y + Math.sin(trooper.rotation) * 30,
-            },
-            velocity: {
-                x: Math.cos(trooper.rotation) * PROJECTILE_SPEED,
-                y: Math.sin(trooper.rotation) * PROJECTILE_SPEED,
-            },
-            rotation: trooper.rotation
-        })
-    )
+    troopers.forEach((trooper) => {
+        if (trooper.dead == false) {
+            trooper.projectiles.push(
+                new Projectile({
+                    position: {
+                        x: trooper.position.x + Math.cos(trooper.rotation) * 30,
+                        y: trooper.position.y + Math.sin(trooper.rotation) * 30,
+                    },
+                    velocity: {
+                        x: Math.cos(trooper.rotation) * PROJECTILE_SPEED,
+                        y: Math.sin(trooper.rotation) * PROJECTILE_SPEED,
+                    },
+                    rotation: trooper.rotation
+                })
+            )
+        }
+    })
+ 
     
 }
 
+
+function spawnTrooper() {
+    let side = Math.floor((Math.random() * 4) + 1)
+    let x = Math.floor((Math.random() * 800) + 1)
+    let y = Math.floor((Math.random() * 800) + 1)
+    if (side == 1) { //top
+        y = 0
+    } else if (side == 2 ) { //right
+        x = 800
+    } else if (side == 3 ) { //bottom
+        y = 800
+    } else if (side == 4 ) { //left
+        x = 0 
+    } 
+    
+    troopers.push(
+        new Trooper({        
+            position: { x: x, y: y },            
+            velocity: { x: 0, y: 0},
+            playerPosition: player.position
+        })
+    )
+}
 
 //////////////////////////
 //
@@ -355,119 +388,144 @@ function shootAll() {
 //
 /////////////////////////
 let shootCounter = 0
+let spawnCounter = 0
 let keyboard = { up: false, down: false, left: false, right: false };
 function drawBoard() {
+    
+    if (!gameStarted) {
+        drawStartScreen();
+    } else {
     ctx.fillStyle = "background.png"
     ctx.fillRect(0,0, 800,800)
     let background = new Image()
     background.src = "background2.png"
     ctx.drawImage(background,0,0, 800, 800)
 
-    //// image
-    // lage(image, column*frameWidth, row*frameHeight, frameWidth, frameHeight, canvas.width / 2 - (frameWidth /2), canvas.height / 2 - (frameHeight / 4 * 3), frameWidth, frameHeight);
-    // ctx.drawImage(image, 0, 0 )
-    // // ctx.drawImage(image, column*frameWidth, row*frameHeight)
-    // ctx.drawImage(image, 380, 0, 128, 128, 400, 400, 128, 128)
-    // x: canvas.width / 2, y: canvas.height / 2 },
     
-    ////
-    // ctx.strokeRect(canvas.width / 2, canvas.height / 2, 128, 128)
-    //
-
     //neon effect for everything !
-    ctx.shadowColor = "rgb("+193+","+253+","+51+")";
-    ctx.shadowBlur = 10;
+    // ctx.shadowColor = "rgb("+193+","+253+","+51+")";
+    // ctx.shadowBlur = 10;
 
-    projectiles.forEach((projectile, projectileIndex) => {
-        const dist = Math.hypot(projectile.trajectory.x - player.position.x, projectile.trajectory.y - player.position.y)
-         if (dist < 20 && player.slash == true) {
-            console.log("redirected")
-            projectiles[projectileIndex].velocity.x =  -projectiles[projectileIndex].velocity.x
-            projectiles[projectileIndex].velocity.y =  -projectiles[projectileIndex].velocity.y
-            projectiles[projectileIndex].boltColor = 'blue'
-        }else if (dist < 20) {
-            console.log("touching player")
-            projectiles.splice(projectileIndex,1)
-        }
-    })
-    
     
     player.update()
-    trooper.update()
     
+    
+    // trooper.update()
+    // trooper2.update()
+    troopers.forEach((trooper, trooperIndex) => {
+        trooper.update()
+        trooper.projectiles.forEach((projectile, projectileIndex) => {
+            projectile.update()
+            const dist = Math.hypot(trooper.projectiles[projectileIndex].trajectory.x - player.position.x, trooper.projectiles[projectileIndex].trajectory.y - player.position.y)
+            const distToEnemy = Math.hypot(trooper.projectiles[projectileIndex].trajectory.x - trooper.position.x, trooper.projectiles[projectileIndex].trajectory.y - trooper.position.y)
+            if (dist < 20 && player.slash == true) {
+                console.log("redirected")
+                trooper.projectiles[projectileIndex].velocity.x =  -trooper.projectiles[projectileIndex].velocity.x
+                trooper.projectiles[projectileIndex].velocity.y =  -trooper.projectiles[projectileIndex].velocity.y
+                trooper.projectiles[projectileIndex].position.x = trooper.projectiles[projectileIndex].trajectory.x
+                trooper.projectiles[projectileIndex].position.y = trooper.projectiles[projectileIndex].trajectory.y
 
+                trooper.projectiles[projectileIndex].boltColor = 'blue'
+                trooper.projectiles[projectileIndex].velocity.x *= 1.8
+                trooper.projectiles[projectileIndex].velocity.y *= 1.8
+            }else if (dist < 20) {
+                console.log("Hit Player")
+                player.health--
+                trooper.projectiles.splice(projectileIndex,1)
+            } else if (projectile.boltColor == "blue" && distToEnemy <= 20 ) {
+                trooper.dead = true
+                console.log("enemy hit")              
+            } else if (projectile.trajectory.x >= 800 || projectile.trajectory.x <= 0 || projectile.trajectory.y >= 800 || projectile.trajectory.y <= 0) {
+                trooper.projectiles.splice(projectileIndex,1)
+            }      
+        })
+    })
+
+    troopers.forEach((trooper, trooperIndex) => {
+        if (trooper.dead == true && trooper.projectiles.length == 0 && trooper.deathCounter > 400) {
+            troopers.splice(trooperIndex,1 )
+        }
+    })
 
     shootCounter++
-    if (shootCounter >= 60) {
+    if (shootCounter >= 120) {
+        
         shootAll()
         shootCounter = 0
     }
 
-
-    // drawBolt()
-    // trooperpos.update()
-    for (let i = 0; i < projectiles.length; i++ ) {
-        projectiles[i].update()
+    spawnCounter++
+    if (spawnCounter >=spawnSpeed) {
+        spawnTrooper()
+        spawnCounter = 0
+        console.log(spawnSpeed)
+        if (spawnSpeed > 10 ) {
+            spawnSpeed--
+        }
     }
-    // neonRect(200,200,50,50,193,253,51);
-    // window.requestAnimationFrame(draw)
-}
 
-//
-let ay = 0; //gravity constant in SI units
-// let ay = 1;
-let dt = 0.2; //time step in seconds
-let t = 0; //initial time
-let vel = 20; //intial speed in meters per second
-let yo = trooper.y; //pixels from top to start 
-let xo = trooper.x; //pixels from left to start
-let angle = 90 * Math.PI / 180; // 45 degrees converted to radians
-let vx = vel * Math.cos(angle);
-let vy = vel * Math.sin(angle);
-let x = xo; //position at t=0
-let y = yo; //position at t=0
-let colDiam = 100; //collagen count
+    timer += 20/1000
+    ctx.fillStyle = 'black'
+    ctx.strokeStyle = 'white'
+    ctx.font = "bold 30px Arial";
+    // ctx.shadowColor = "white";
+    ctx.shadowBlur = 0;
+    ctx.lineWidth = 1
+    ctx.fillText(`Timer: ${parseInt(timer)} sec`, 20, 50);
+    ctx.strokeText(`Timer: ${parseInt(timer)} sec`, 20, 50);
+    ctx.fillText(`Health: ${player.health}`, 600, 50)
+    ctx.strokeText(`Health: ${player.health}`, 600, 50)
 
-function shoot() {
-
-}
-
-// var drawRectangle = function(x, y, w, h, border){
-//     ctx.beginPath();
-//     ctx.moveTo(x+border, y);
-//     ctx.lineTo(x+w-border, y);
-//     ctx.quadraticCurveTo(x+w-border, y, x+w, y+border);
-//     ctx.lineTo(x+w, y+h-border);
-//     ctx.quadraticCurveTo(x+w, y+h-border, x+w-border, y+h);
-//     ctx.lineTo(x+border, y+h);
-//     ctx.quadraticCurveTo(x+border, y+h, x, y+h-border);
-//     ctx.lineTo(x, y+border);
-//     ctx.quadraticCurveTo(x, y+border, x+border, y);
-//     ctx.closePath();
-//     ctx.stroke();
-//   }
-//   var neonRect = function(x,y,w,h,r,g,b){
-//     ctx.shadowColor = "rgb("+r+","+g+","+b+")";
-//     ctx.shadowBlur = 10;
-//     ctx.strokeStyle= "rgba("+r+","+g+","+b+",0.2)";
-//     ctx.lineWidth=7.5;
-//     drawRectangle(x,y,w,h,1.5);
-//     ctx.strokeStyle= "rgba("+r+","+g+","+b+",0.2)";
-//     ctx.lineWidth=6;
-//     drawRectangle(x,y,w,h,1.5);
-//     ctx.strokeStyle= "rgba("+r+","+g+","+b+",0.2)";
-//     ctx.lineWidth=4.5;
-//     drawRectangle(x,y,w,h,1.5);
-//     ctx.strokeStyle= "rgba("+r+","+g+","+b+",0.2)";
-//     ctx.lineWidth=3;
-//     drawRectangle(x,y,w,h,1.5);
-//     ctx.strokeStyle= '#fff';
-//     ctx.lineWidth=1.5;
-//     drawRectangle(x,y,w,h,1.5);
     
-//   };
+}
+if (player.health > 0 ) {
+    window.requestAnimationFrame(drawBoard)
+    
+} else {
+    ctx.fillStyle = 'red'
+    ctx.strokeStyle = 'black'
+    ctx.font = "30px Arial";
+    
+    let deathText = `You Died! You survived for ${parseInt(timer)} sec! Press Enter to Reset`
+    ctx.fillText(deathText,(canvas.width/2) - (ctx.measureText(deathText ).width/ 2) , canvas.height/2);
+    ctx.strokeText(deathText,(canvas.width/2) - (ctx.measureText(deathText ).width/ 2) , canvas.height/2);
+    ctx.fill();
+    ctx.stroke();
+    gameEnded = true
+    score = timer
+    if (score > Math.min(...highScores) || highScores.length < 10) {
+        // The current score is higher than one of the top 10 or there are fewer than 10 high scores
+        updateHighScores(score);
+      }
+    console.log(highScores)
+    displayHighScores()
+}
+}
 
-drawBoard()
+function updateHighScores(newScore) {
+    highScores.push(newScore);
+    highScores.sort((a, b) => b - a); // Sort in descending order
+    if (highScores.length > 10) {
+      highScores.pop(); // Remove the lowest score if there are more than 10
+    }
+    localStorage.setItem('highScores', JSON.stringify(highScores));
+  }
+
+  function displayHighScores() {
+    const highScoresListElement = document.getElementById('high-scores-list');
+  
+    // Clear the existing list
+    highScoresListElement.innerHTML = '';
+  
+    // Display the last 10 highest scores
+    for (let i = 0; i < highScores.length; i++) {
+      const listItem = document.createElement('li');
+      listItem.textContent = `${i + 1}: ${highScores[i].toFixed(2)}sec`;
+      highScoresListElement.appendChild(listItem);
+    }
+  }
+displayHighScores()
+
 
 window.addEventListener('keydown', (e) => {
             let playerSpeed = 20
@@ -491,14 +549,12 @@ window.addEventListener('keydown', (e) => {
                     break;
                 case ' ':
                     // console.log("space pushed")
+                    e.preventDefault();
                     player.slashSaber()
                     break;
                     
             }
-            ctx.clearRect(0,0, 800, 800);
-            ctx.fillStyle = "grey"
-            ctx.fillRect(0,0, 800,800)
-            // drawBoard();
+
         })
 
 document.addEventListener('keydown', function (event) {
@@ -507,6 +563,29 @@ document.addEventListener('keydown', function (event) {
         case 83: keyboard.down = true; player.rotation = 90; break; //s
         case 65: keyboard.left = true; player.rotation = 180 ;break; //a
         case 68: keyboard.right = true;player.rotation = 0 ; break; //d
+    }
+    if ( event.key === "Enter") {
+        console.log(gameEnded, bolts)
+        startScreen.style.display = "none"; // Hide the start screen
+        startGame()
+        if (gameEnded) {
+            gameEnded = false
+            // bolts = []
+            troopers = []
+            // projectiles = []            
+            timer = 0.0
+            gameStarted = false    
+            gameEnded = false
+            
+            player.health = 30 
+            player.position =  { x: canvas.width / 2, y: canvas.height / 2 }
+            gameStarted = false
+            drawBoard()
+            
+        }
+        // gameStarted = true;
+
+
     }
     });
     
@@ -519,205 +598,22 @@ switch (event.keyCode) {
 }
 });
 
-let gameCycle = setInterval(drawBoard, 20)
+function startGame() {
+    startScreen.style.display = "none"; 
+    gameStarted = true;
+
+ 
+}
 
 
-// function drawJedi() {
-//     // const canvas = document.querySelector('#arena')
-//     // const ctx = canvas.getContext("2d")
+function drawStartScreen() {
+    ctx.fillStyle = "black"; // Background color
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    // Customize your start screen text
+    ctx.fillStyle = "white";
+    ctx.font = "36px Arial";
+    ctx.fillText("Press Enter to Start", canvas.width / 2 - 160, canvas.height / 2);
+}
+drawBoard()
 
-//     ctx.fillStyle = "blue"
-//     ctx.fillRect(player.x, player.y, 20, 20);
-// }
-
-
-// const trooperpos = new Trooper({
-//     position: { x: 200, y: 200 },
-//     velocity: { x: 0, y: 0 },
-//   })
-
-
-// function drawTrooper() {
-//     ctx.fillStyle = "red"
-//     ctx.fillRect(700, 400, 20, 20);
-// }
-// function drawBolt() {
-    
-//     // bolt.x -= 1
-//     // bolt.y += 0
-//     if ((x < 800 && x > 0) && (y < 800 && y >0)) {
-//         t = +dt;
-//         x = (x + vx * t) + colDiam * .0109;
-//         y = y - vy * t + .5 * ay * (t * t);
-//         let futureIntervals = 50
-//         let futurex = (x + vx * (t * dt *futureIntervals) ) + colDiam * .0109;
-//         let futurey = y - vy * (t * dt *futureIntervals) + .5 * ay * ((t * dt *futureIntervals) * (t * dt *futureIntervals));
-        
-        
-//         ctx.fillStyle = "orange"
-        
-//         // ctx.save()
-//         // ctx.rotate(45 * Math.PI / 180);
-//         ctx.beginPath()
-//         ctx.moveTo(x,y)
-//         ctx.lineTo(futurex,futurey)
-//         ctx.lineTo(futurex +2,futurey+2)
-
-//         console.log(`x: ${x} y: ${y}`)
-//         console.log(`futurex: ${futurex} futurey: ${futurey}`)
-//         ctx.fill()
-//         // ctx.save();
-        
-//         // 
-//         // ctx.drawImage();
-//         // draw your object
-//         // ctx.restore();
-//     } 
-    
-// }
-
-
-    //draw 2 rectangles
-    // ctx.fillStyle = "rgb(200, 0, 0)";
-    // ctx.fillRect(10, 10, 50, 50);
-
-    // ctx.fillStyle = "rgba(0, 0, 200, 0.5)";
-    // ctx.fillRect(30, 30, 50, 50);
-    // //draw a rectangle
-    // ctx.fillRect(25, 25, 100, 100);
-    // ctx.clearRect(45, 45, 60, 60);
-    // ctx.strokeRect(50, 50, 50, 50);
-
-    //draw a triangle then fill it
-    // ctx.beginPath();
-    // ctx.moveTo(75, 50);
-    // ctx.lineTo(100, 75);
-    // ctx.lineTo(100, 25);
-    // ctx.fill();
-    
-    // ctx.beginPath();
-    // ctx.arc(75, 75, 50, 0, Math.PI * 2, true); // Outer circle
-    // ctx.moveTo(110, 75);
-    // ctx.arc(75, 75, 35, 0, Math.PI, false); // Mouth (clockwise)
-    // ctx.moveTo(65, 65);
-    // ctx.arc(60, 65, 5, 0, Math.PI * 2, true); // Left eye
-    // ctx.moveTo(95, 65);
-    // ctx.arc(90, 65, 5, 0, Math.PI * 2, true); // Right eye
-    // ctx.stroke();
-
-    // for (let i = 0; i < 4; i++) {
-    //     for (let j = 0; j < 3; j++) {
-    //       ctx.beginPath();
-    //       const x = 25 + j * 50; // x coordinate
-    //       const y = 25 + i * 50; // y coordinate
-    //       const radius = 20; // Arc radius
-    //       const startAngle = 0; // Starting point on circle
-    //       const endAngle = Math.PI + (Math.PI * j) / 2; // End point on circle
-    //       const counterclockwise = i % 2 !== 0; // clockwise or counterclockwise
-  
-    //       ctx.arc(x, y, radius, startAngle, endAngle, counterclockwise);
-  
-    //       if (i > 1) {
-    //         ctx.fill();
-    //       } else {
-    //         ctx.stroke();
-    //       }
-    //     }
-    //   }
-
-//     for (let i = 0; i < 6; i++) {
-//         for (let j = 0; j < 6; j++) {
-//           ctx.fillStyle = `rgb(${Math.floor(255 - 42.5 * i)}, ${Math.floor(
-//             255 - 42.5 * j,
-//           )}, 0)`;
-//           ctx.fillRect(j * 25, i * 25, 25, 25);
-//         }
-//       }
-//   }
-// }
-
-// draw()
-  
-// let canvas = document.createElement("canvas")
-// canvas.id = "canvas"
-// let ctx = canvas.getContext("2d")
-// canvas.width = 800
-// canvas.height = 800
-// ctx.fillStyle = "rbga(0,0,200,0.2)"
-// ctx.fillRect(0,0,800,800)
-// ctx.beginPath()
-// ctx.moveTo(0, 800)
-
-
-
-// document.addEventListener('DOMContentLoaded', () => {
-//     const arena = document.querySelector('#myCanvas')
-//     const jedi = document.createElement('div')
-//     const troopers = []
-//     // const ctx = arena.getContext("2d")
-//     // const canvas = document.getElementById("myCanvas")
-//     const ctx = arena.getContext("2d");
-    
-
-//     let jediXLocation = 400
-//     let jediYLocation = 400
-//     const moveSpeed = 10
-
-//     function createJedi() {
-//         arena.appendChild(jedi)
-//         jedi.classList.add('jedi')
-//         jedi.style.left = jediXLocation + 'px'
-//         jedi.style.top = jediYLocation + 'px'
-
-//     }
-
-//     function createTrooper() {
-//         const trooper = document.createElement('div')
-//         arena.appendChild(trooper)
-//         trooper.classList.add('trooper')
-//         trooper.style.left = '700px'
-//         trooper.style.top = '400px'
-//     }
-
-//     function shoot() {
-
-//     }
-    
-
-
-//     //https://www.fwait.com/how-to-move-an-object-with-arrow-keys-in-javascript/
-//     window.addEventListener('keydown', (e) => {
-//         switch (e.key) {
-//             case 'ArrowLeft':
-//                 jedi.style.left = parseInt(jedi.style.left) - moveSpeed + 'px';
-//                 break;
-//             case 'ArrowRight':
-//                 jedi.style.left = parseInt(jedi.style.left) + moveSpeed + 'px';
-//                 break;
-//             case 'ArrowUp':
-//                 jedi.style.top = parseInt(jedi.style.top) - moveSpeed + 'px';
-//                 break;
-//             case 'ArrowDown':
-//                 jedi.style.top = parseInt(jedi.style.top) + moveSpeed + 'px';
-//                 break;
-//         }
-//     })
-
-
-//     // createJedi()
-
-    
-
-//     function  start() {
-//         createJedi()
-//         createTrooper()
-//         ctx.moveTo(0, 0);
-//         ctx.lineTo(100, 100);
-//         ctx.stroke();
-
-//     }
-
-//     start()
-
-// })

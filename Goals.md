@@ -1,28 +1,30 @@
 # Goals
 
 ## Friday
-- Create an Arena
-- Create player character
-- Be able to move the character around
-- remove player
-- add storm trooper
-- have the storm trooper shoot
+Done - Create an Arena 
+Done - Create player character
+Done - Be able to move the character around
+
+Done - add storm trooper
+Done - have the storm trooper shoot
 
 ## Monday
-- have to storm troopers move
-- have the storm trooper shoot from any location towards the middle
-- add the player back in
-- have the storm trooper shoot at the player while stationary
-- shoot at the player while moving
+Done - have to storm troopers move
+Done - have the storm trooper shoot from any location towards the player
+Done - shoot at the player while moving
 
 ## Tuesday
 
-- add in collision for when the bolts hit the player
-- add in lightsaber swipes
-- add in reflection collision and reversing of the bolt
+Done- add in collision for when the bolts hit the player
+Done- add in lightsaber swipes
+Done- add in reflection collision and reversing of the bolt
 
 ## Wednesday
 
+- add the death of guys
+- add in multiple enemies
+- add in a start screen
+- add in a dearth screen
 - add in timer
 - add in death screen with final time
 - add in replay button
@@ -30,4 +32,11 @@
 
 ## Thursday
 
-- Bugs/Extra Features
+Done- Fix the screen Flicker
+done add controls instrctions
+- add start screen 
+Done add death screen
+Done add total time after death
+
+
+Extra Features
