@@ -429,8 +429,8 @@ function drawBoard() {
 
     
     //neon effect for everything !
-    // ctx.shadowColor = "rgb("+193+","+253+","+51+")";
-    // ctx.shadowBlur = 10;
+    ctx.shadowColor = "rgb("+193+","+253+","+51+")";
+    ctx.shadowBlur = 10;
 
     
     player.update()
