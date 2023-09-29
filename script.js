@@ -19,6 +19,49 @@ let highScores = []
 if (localStorage.getItem('highScores')) {
     highScores = JSON.parse(localStorage.getItem('highScores'));
   }
+
+const saberSwipe = new Audio('saberClash.mp3');
+saberSwipe.loop = false;
+saberSwipe.volume = 0.20
+
+const saberMiss = new Audio('saberMiss2.m4a');
+
+saberMiss.volume = 0.5
+
+const saberStart = new Audio('power-up-2-lightsaber.mp3');
+saberStart.loop = false;
+saberStart.volume = .5
+
+const saberHit = new Audio('crash-2-lightsaber.mp3');
+saberHit.loop = false;
+saberHit.volume = .5
+
+const blaster = new Audio('blaster-pistol-001-01.mp3');
+blaster.loop = false;
+blaster.volume = .2
+
+const intro = new Audio('im-a-jedi.mp3');
+intro.loop = false;
+intro.volume = 1
+
+const playerHit = new Audio('ugh.mp3');
+playerHit.loop = false;
+playerHit.volume = .4
+
+// const playerDeath = new Audio('ewok-death.mp3');
+// playerDeath.loop = false;
+// playerDeath.volume = .4
+
+const playerDeath = new Audio('death.mp3');
+playerDeath.loop = false;
+playerDeath.volume = .4
+
+const preDeath = new Audio('preDeath.mp3');
+preDeath.loop = false;
+preDeath.volume = 1
+
+
+
 // 
 // How to calculate vector between 2 points:
 // var vectorX = this.x - enemy.x;
@@ -38,7 +81,7 @@ class Player {
         this.saberAnimationCounter = 18
         this.direction = "down"
         this.animateCounter = 0
-        this.health = 30
+        this.health = 20
     }
 
     draw() {
@@ -354,6 +397,7 @@ function shootAll() {
             )
         }
     })
+    blaster.play()
  
     
 }
@@ -420,6 +464,8 @@ function drawBoard() {
             const distToEnemy = Math.hypot(trooper.projectiles[projectileIndex].trajectory.x - trooper.position.x, trooper.projectiles[projectileIndex].trajectory.y - trooper.position.y)
             if (dist < 20 && player.slash == true) {
                 console.log("redirected")
+                
+                saberSwipe.play(); 
                 trooper.projectiles[projectileIndex].velocity.x =  -trooper.projectiles[projectileIndex].velocity.x
                 trooper.projectiles[projectileIndex].velocity.y =  -trooper.projectiles[projectileIndex].velocity.y
                 trooper.projectiles[projectileIndex].position.x = trooper.projectiles[projectileIndex].trajectory.x
@@ -431,9 +477,16 @@ function drawBoard() {
             }else if (dist < 20) {
                 console.log("Hit Player")
                 player.health--
+                if (player.health == 10) {
+                    preDeath.play()
+                } else {
+                    playerHit.play()
+                }
+                
                 trooper.projectiles.splice(projectileIndex,1)
             } else if (projectile.boltColor == "blue" && distToEnemy <= 20 ) {
                 trooper.dead = true
+                saberHit.play()
                 console.log("enemy hit")              
             } else if (projectile.trajectory.x >= 800 || projectile.trajectory.x <= 0 || projectile.trajectory.y >= 800 || projectile.trajectory.y <= 0) {
                 trooper.projectiles.splice(projectileIndex,1)
@@ -478,10 +531,13 @@ function drawBoard() {
 
     
 }
+
+
 if (player.health > 0 ) {
     window.requestAnimationFrame(drawBoard)
     
 } else {
+    playerDeath.play()
     ctx.fillStyle = 'red'
     ctx.strokeStyle = 'black'
     ctx.font = "30px Arial";
@@ -530,27 +586,31 @@ displayHighScores()
 window.addEventListener('keydown', (e) => {
             let playerSpeed = 20
             switch (e.key) {
-                case 'ArrowLeft':                    
-                    player.position.x -= playerSpeed
-                    player.rotation = 180                 
-                    break;
-                case 'ArrowRight':                   
-                    player.position.x += playerSpeed
-                    player.rotation = 0                  
-                    break;
-                case 'ArrowUp':                    
-                    player.position.y -= playerSpeed
-                    player.rotation = 270                
-                    break;
-                case 'ArrowDown':                    
-                    player.position.y += playerSpeed
-                    player.rotation = 90            
-                    console.log("down pushed")
-                    break;
+                // case 'ArrowLeft':                    
+                //     player.position.x -= playerSpeed
+                //     player.rotation = 180                 
+                //     break;
+                // case 'ArrowRight':                   
+                //     player.position.x += playerSpeed
+                //     player.rotation = 0                  
+                //     break;
+                // case 'ArrowUp':                    
+                //     player.position.y -= playerSpeed
+                //     player.rotation = 270                
+                //     break;
+                // case 'ArrowDown':                    
+                //     player.position.y += playerSpeed
+                //     player.rotation = 90            
+                //     console.log("down pushed")
+                //     break;
                 case ' ':
                     // console.log("space pushed")
                     e.preventDefault();
                     player.slashSaber()
+                    if (gameStarted && gameEnded == false) {
+                        saberMiss.play()
+                    }
+                    
                     break;
                     
             }
@@ -567,8 +627,11 @@ document.addEventListener('keydown', function (event) {
     if ( event.key === "Enter") {
         console.log(gameEnded, bolts)
         startScreen.style.display = "none"; // Hide the start screen
-        startGame()
-        if (gameEnded) {
+        if (gameStarted == false) {
+            startGame()
+        }
+        
+        if (gameEnded && gameStarted) {
             gameEnded = false
             // bolts = []
             troopers = []
@@ -579,7 +642,8 @@ document.addEventListener('keydown', function (event) {
             
             player.health = 30 
             player.position =  { x: canvas.width / 2, y: canvas.height / 2 }
-            gameStarted = false
+            
+            
             drawBoard()
             
         }
@@ -601,6 +665,8 @@ switch (event.keyCode) {
 function startGame() {
     startScreen.style.display = "none"; 
     gameStarted = true;
+    saberStart.play()
+    intro.play()
 
  
 }
