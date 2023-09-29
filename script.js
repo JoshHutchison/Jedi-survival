@@ -347,25 +347,7 @@ class Trooper {
         }
     }
   
-    // getVertices() {
-    //   const cos = Math.cos(this.rotation)
-    //   const sin = Math.sin(this.rotation)
-  
-    //   return [
-    //     {
-    //       x: this.position.x + cos * 30 - sin * 0,
-    //       y: this.position.y + sin * 30 + cos * 0,
-    //     },
-    //     {
-    //       x: this.position.x + cos * -10 - sin * 10,
-    //       y: this.position.y + sin * -10 + cos * 10,
-    //     },
-    //     {
-    //       x: this.position.x + cos * -10 - sin * -10,
-    //       y: this.position.y + sin * -10 + cos * -10,
-    //     },
-    //   ]
-    // }
+
   }
 
 
@@ -426,11 +408,11 @@ function spawnTrooper() {
     )
 }
 
-//////////////////////////
-//
+////////////////////////////////////////////////////////////////////////
+// 
 //  Main Animate
 //
-/////////////////////////
+////////////////////////////////////////////////////////////////////////
 let shootCounter = 0
 let spawnCounter = 0
 let keyboard = { up: false, down: false, left: false, right: false };
@@ -673,10 +655,10 @@ function startGame() {
 
 
 function drawStartScreen() {
-    ctx.fillStyle = "black"; // Background color
+    ctx.fillStyle = "black"; 
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Customize your start screen text
+
     ctx.fillStyle = "white";
     ctx.font = "36px Arial";
     ctx.fillText("Press Enter to Start", canvas.width / 2 - 160, canvas.height / 2);
