@@ -66,7 +66,6 @@ https://gist.github.com/conorbuck/2606166
 
 ## Biggest Challenges, biggest successes
 - Sprite mapping/animation
-- Sounds
 - figuring out the angles the math  
 
 ## what you were unable to accomplish
